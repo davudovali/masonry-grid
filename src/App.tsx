@@ -5,9 +5,7 @@ import PhotosList from './pages/PhotosList/PhotosList'
 function App() {
   return (
     <div className='App'>
-      <header className='App-header'>
-        <PhotosList />
-      </header>
+      <PhotosList />
     </div>
   )
 }

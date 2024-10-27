@@ -1,20 +1,22 @@
 import { PhotoType, PhotoToRenderType } from '../PhotoType'
-import { useMemo, useState, useCallback, UIEvent, useEffect } from 'react'
+import { useMemo, useState, useCallback, UIEvent, useEffect, useRef } from 'react'
 import MasonryGridView from './MasonryGridView'
 import MasonryLoadingView from './MasonryLoadingView'
 
 const VERTICAL_GAP_PX = 8
 const HORIZONTAL_GAP_PX = 8
 const DEFAULT_PHOTO_WIDTH_PX = 200
-const SCROLL_BUFFER = 100
+const SCROLL_BUFFER = 400
 
 function buildPhotosToRender({
   photos,
   visibleHeight,
   columnsNumber,
   scrollPosition,
+  currentPhotos,
 }: {
   photos: PhotoType[]
+  currentPhotos: PhotoType[]
   columnsNumber: number
   scrollPosition: number
   visibleHeight: number
@@ -61,9 +63,7 @@ function buildPhotosToRender({
   return { photosToRender, containerHeight }
 }
 
-function usePhotosPositionCalculation(photos?: PhotoType[]) {
-  const [scrollPosition, setScrollPosition] = useState(0)
-
+function useColumnsNumber() {
   const [maxColumnsNumber, setMaxColumnsNumber] = useState<number>(() => {
     const width = document.getElementById('root')?.getBoundingClientRect()?.width || 0
     return Math.floor(width / (DEFAULT_PHOTO_WIDTH_PX + HORIZONTAL_GAP_PX))
@@ -75,25 +75,6 @@ function usePhotosPositionCalculation(photos?: PhotoType[]) {
     selectedColumnsNumber && selectedColumnsNumber <= maxColumnsNumber
       ? selectedColumnsNumber
       : maxColumnsNumber
-
-  const { photosToRender, containerHeight, containerWidth } = useMemo(() => {
-    if (!photos || !photos.length)
-      return { photosToRender: [], containerHeight: 0, containerWidth: 0 }
-
-    const { photosToRender, containerHeight } = buildPhotosToRender({
-      photos,
-      scrollPosition,
-      columnsNumber,
-      visibleHeight: document.getElementById('root')?.getBoundingClientRect()?.height || 0,
-    })
-
-    return {
-      photosToRender,
-      containerHeight,
-      containerWidth:
-        columnsNumber * (DEFAULT_PHOTO_WIDTH_PX + HORIZONTAL_GAP_PX) - HORIZONTAL_GAP_PX,
-    }
-  }, [photos, scrollPosition, columnsNumber])
 
   useEffect(() => {
     const onResize = () => {
@@ -109,6 +90,41 @@ function usePhotosPositionCalculation(photos?: PhotoType[]) {
     return () => window.removeEventListener('resize', onResize)
   }, [selectedColumnsNumber])
 
+  return { columnsNumber, setSelectedColumnsNumber }
+}
+
+function useMasonryGrid({
+  photos,
+  columnsNumber,
+}: {
+  photos?: PhotoType[]
+  columnsNumber: number
+}) {
+  const [scrollPosition, setScrollPosition] = useState(0)
+
+  const photosRef = useRef<PhotoToRenderType[]>([])
+
+  const { photosToRender, containerHeight, containerWidth } = useMemo(() => {
+    if (!photos || !photos.length) {
+      return { photosToRender: [], containerHeight: 0, containerWidth: 0 }
+    }
+
+    const { photosToRender, containerHeight } = buildPhotosToRender({
+      currentPhotos: photosRef.current,
+      photos,
+      scrollPosition,
+      columnsNumber,
+      visibleHeight: document.getElementById('root')?.getBoundingClientRect()?.height || 0,
+    })
+
+    return {
+      photosToRender,
+      containerHeight,
+      containerWidth:
+        columnsNumber * (DEFAULT_PHOTO_WIDTH_PX + HORIZONTAL_GAP_PX) - HORIZONTAL_GAP_PX,
+    }
+  }, [photos, scrollPosition, columnsNumber])
+
   const onScroll = useCallback((event: UIEvent<HTMLElement>) => {
     setScrollPosition(event.currentTarget.scrollTop)
   }, [])
@@ -116,17 +132,13 @@ function usePhotosPositionCalculation(photos?: PhotoType[]) {
   return { photosToRender, containerHeight, containerWidth, onScroll, columnsNumber }
 }
 
-export default function MasonryGridController({
-  photos,
-  isLoading,
-  isSuccess,
-}: {
-  photos?: PhotoType[]
-  isLoading: boolean
-  isSuccess: boolean
-}) {
-  const { photosToRender, containerHeight, containerWidth, onScroll } =
-    usePhotosPositionCalculation(photos)
+export default function MasonryGridController({ photos }: { photos?: PhotoType[] }) {
+  const { columnsNumber } = useColumnsNumber()
+
+  const { photosToRender, containerHeight, containerWidth, onScroll } = useMasonryGrid({
+    photos,
+    columnsNumber,
+  })
 
   if (!photos) return <MasonryLoadingView />
 
