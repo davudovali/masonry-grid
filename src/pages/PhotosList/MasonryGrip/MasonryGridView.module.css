@@ -12,3 +12,16 @@
   position: relative;
   width: 100%;
 }
+
+.imageContainer {
+  position: absolute;
+  will-change: transform;
+  transition: 400ms ease-in-out;
+}
+.imageContainer > span {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  font-size: 2rem;
+  color: red;
+}
