@@ -1,11 +1,14 @@
 import React from 'react'
 import './App.css'
 import PhotosList from './pages/PhotosList/PhotosList'
+import { Route, Routes } from 'react-router'
 
 function App() {
   return (
     <div className='App'>
-      <PhotosList />
+      <Routes>
+        <Route path='/' element={<PhotosList />} />
+      </Routes>
     </div>
   )
 }

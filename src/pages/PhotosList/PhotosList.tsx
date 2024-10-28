@@ -2,58 +2,105 @@ import pexelApiClient from '../../tools/pexelApiClient'
 import { useQuery } from 'react-query'
 import { PhotoType } from './PhotoType'
 import MasonryGridController from './MasonryGrid/MasonryGridController'
-import MoreButton from './MoreButton/MoreButton'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import Header from '../../components/Header/Header'
+import { useLocation, useNavigate } from 'react-router-dom'
+import SearchInput from './SearchInput/SearchInput'
 
 const retrievePhotos = async (
   page: number,
+  search: string,
 ): Promise<{
   photos: PhotoType[]
   page: number
   per_page: number
   total_result: number
 }> => {
-  const params = new URLSearchParams({ page: page.toString() })
+  const params = new URLSearchParams({ page: page.toString(), query: search })
   const response = await pexelApiClient.get(
-    `https://api.pexels.com/v1/curated?per_page=80&${params.toString()}`,
+    search
+      ? `https://api.pexels.com/v1/search?per_page=80&${params.toString()}`
+      : `https://api.pexels.com/v1/curated?per_page=80&${params.toString()}`,
   )
   return response.data
 }
 
 export default function PhotosList() {
-  const [page, setPage] = useState(1)
-  const [{ photos }, setPhotos] = useState<{
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  const [{ photos, search, page }, setPhotos] = useState<{
     photos: PhotoType[]
     usedIds: { [key: number]: boolean }
-  }>({ photos: [], usedIds: {} })
+    search: string
+    oldSearch: string
+    page: number
+  }>(() => {
+    const params = new URLSearchParams(location.search)
 
-  useQuery(['photosData', page], () => retrievePhotos(page), {
-    keepPreviousData: true,
-    onSuccess: (data) => {
-      setPhotos(({ photos, usedIds }) => {
-        //Pexel could repeat images on different pages, have to filter images from already used
-        const newUsedIds = { ...usedIds }
-        const filteredFromOldPhotos = data.photos.filter((x) => {
-          if (newUsedIds[x.id]) {
-            return false
-          } else {
-            newUsedIds[x.id] = true
-          }
-          return true
-        })
-        return { photos: [...photos, ...filteredFromOldPhotos], usedIds: newUsedIds }
-      })
-    },
+    return {
+      photos: [],
+      usedIds: {},
+      search: params.get('search') || '',
+      oldSearch: params.get('search') || '',
+      page: 1,
+    }
   })
 
-  const onMoreButtonClick = useCallback(() => {
-    setPage((oldValue) => oldValue + 1)
+  const { data } = useQuery(['photosData', page, search], () => retrievePhotos(page, search))
+
+  useEffect(() => {
+    if (!data) return
+
+    setPhotos((oldValue) => {
+      const isSearchChanged = oldValue.oldSearch !== search
+      //Pexel could repeat images on different pages, have to filter images from already used
+      const newUsedIds = isSearchChanged ? {} : { ...oldValue.usedIds }
+      const filteredFromOldPhotos = data.photos.filter((x) => {
+        if (newUsedIds[x.id]) {
+          return false
+        } else {
+          newUsedIds[x.id] = true
+        }
+        return true
+      })
+      return {
+        photos: isSearchChanged
+          ? filteredFromOldPhotos
+          : [...data.photos, ...filteredFromOldPhotos],
+        usedIds: newUsedIds,
+        search,
+        oldSearch: search,
+        page: oldValue.page,
+      }
+    })
+    navigate(search ? `${location.pathname}?search=${search}` : location.pathname)
+  }, [data?.photos])
+
+  const handleClickMore = useCallback(() => {
+    setPhotos((oldValue) => {
+      return { ...oldValue, page: oldValue.page + 1 }
+    })
+  }, [])
+
+  const handleSearch = useCallback((newSearch: string) => {
+    setPhotos((oldValue) => {
+      return {
+        ...oldValue,
+        page: 1,
+        search: newSearch,
+      }
+    })
   }, [])
 
   return (
-    <main>
-      <MasonryGridController photos={photos} />
-      <MoreButton onClick={onMoreButtonClick} />
-    </main>
+    <div>
+      <Header>
+        <SearchInput defaultValue={search} onChangeSearch={handleSearch} />
+      </Header>
+      <main>
+        <MasonryGridController photos={photos} onClickMore={handleClickMore} />
+      </main>
+    </div>
   )
 }

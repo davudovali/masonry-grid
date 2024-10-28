@@ -8,61 +8,6 @@ const HORIZONTAL_GAP_PX = 8
 const DEFAULT_PHOTO_WIDTH_PX = 200
 const SCROLL_BUFFER = 400
 
-function buildPhotosToRender({
-  photos,
-  visibleHeight,
-  columnsNumber,
-  scrollPosition,
-  currentPhotos,
-}: {
-  photos: PhotoType[]
-  currentPhotos: PhotoType[]
-  columnsNumber: number
-  scrollPosition: number
-  visibleHeight: number
-}) {
-  let containerHeight = 0
-
-  const photosToRender = photos.reduce<PhotoToRenderType[]>((result, photo, index) => {
-    const scaleRatio = photo.width / 200
-    const adjustedHeight = photo.height / scaleRatio
-
-    const leftNeighbor = result[index - 1]
-    const topNeighbor = result[index - columnsNumber]
-    const x =
-      index % columnsNumber === 0
-        ? 0
-        : leftNeighbor.position.x + HORIZONTAL_GAP_PX + DEFAULT_PHOTO_WIDTH_PX
-    const y =
-      index < columnsNumber ? 0 : topNeighbor.position.y + VERTICAL_GAP_PX + topNeighbor.size.height
-
-    if (y + adjustedHeight > containerHeight) containerHeight = y + adjustedHeight
-
-    let hidden = false
-
-    if (y + adjustedHeight + SCROLL_BUFFER < scrollPosition) hidden = true
-    if (y - SCROLL_BUFFER > scrollPosition + visibleHeight) hidden = true
-
-    const photoToRender = {
-      ...photo,
-      index,
-      hidden,
-      size: {
-        width: DEFAULT_PHOTO_WIDTH_PX,
-        height: adjustedHeight,
-      },
-      position: {
-        x,
-        y,
-      },
-    }
-
-    result.push(photoToRender)
-    return result
-  }, [])
-  return { photosToRender, containerHeight }
-}
-
 function useColumnsNumber() {
   const [maxColumnsNumber, setMaxColumnsNumber] = useState<number>(() => {
     const width = document.getElementById('root')?.getBoundingClientRect()?.width || 0
@@ -93,6 +38,51 @@ function useColumnsNumber() {
   return { columnsNumber, setSelectedColumnsNumber }
 }
 
+function buildPhotosToRender({
+  photos,
+  columnsNumber,
+}: {
+  photos: PhotoType[]
+  columnsNumber: number
+}) {
+  let containerHeight = 0
+
+  const photosWithSizeAndPosition = photos.reduce<PhotoToRenderType[]>((result, photo, index) => {
+    const scaleRatio = photo.width / 200
+    const adjustedHeight = photo.height / scaleRatio
+
+    const leftNeighbor = result[index - 1]
+    const topNeighbor = result[index - columnsNumber]
+    const x =
+      index % columnsNumber === 0
+        ? 0
+        : leftNeighbor.position.x + HORIZONTAL_GAP_PX + DEFAULT_PHOTO_WIDTH_PX
+    const y =
+      index < columnsNumber ? 0 : topNeighbor.position.y + VERTICAL_GAP_PX + topNeighbor.size.height
+
+    if (y + adjustedHeight > containerHeight) containerHeight = y + adjustedHeight
+
+    const photoWithSizeAndPosition = {
+      ...photo,
+      index,
+      hidden: false,
+      size: {
+        width: DEFAULT_PHOTO_WIDTH_PX,
+        height: adjustedHeight,
+      },
+      position: {
+        x,
+        y,
+      },
+    }
+
+    result.push(photoWithSizeAndPosition)
+    return result
+  }, [])
+
+  return { photosWithSizeAndPosition, containerHeight }
+}
+
 function useMasonryGrid({
   photos,
   columnsNumber,
@@ -102,28 +92,36 @@ function useMasonryGrid({
 }) {
   const [scrollPosition, setScrollPosition] = useState(0)
 
-  const photosRef = useRef<PhotoToRenderType[]>([])
-
-  const { photosToRender, containerHeight, containerWidth } = useMemo(() => {
+  const { photosWithSizeAndPosition, containerHeight, containerWidth } = useMemo(() => {
     if (!photos || !photos.length) {
-      return { photosToRender: [], containerHeight: 0, containerWidth: 0 }
+      return { photosWithSizeAndPosition: [], containerHeight: 0, containerWidth: 0 }
     }
 
-    const { photosToRender, containerHeight } = buildPhotosToRender({
-      currentPhotos: photosRef.current,
+    const { photosWithSizeAndPosition, containerHeight } = buildPhotosToRender({
       photos,
-      scrollPosition,
       columnsNumber,
-      visibleHeight: document.getElementById('root')?.getBoundingClientRect()?.height || 0,
     })
 
     return {
-      photosToRender,
+      photosWithSizeAndPosition,
       containerHeight,
       containerWidth:
         columnsNumber * (DEFAULT_PHOTO_WIDTH_PX + HORIZONTAL_GAP_PX) - HORIZONTAL_GAP_PX,
     }
-  }, [photos, scrollPosition, columnsNumber])
+  }, [photos, columnsNumber])
+
+  const photosToRender = useMemo(() => {
+    const visibleHeight = document.getElementById('root')?.getBoundingClientRect()?.height || 0
+    return photosWithSizeAndPosition?.map((photo) => {
+      const y = photo.position.y
+      const height = photo.size.height
+      let hidden = false
+      if (y + height + SCROLL_BUFFER < scrollPosition) hidden = true
+      if (y - SCROLL_BUFFER > scrollPosition + visibleHeight) hidden = true
+      photo.hidden = hidden
+      return photo
+    })
+  }, [photosWithSizeAndPosition, scrollPosition])
 
   const onScroll = useCallback((event: UIEvent<HTMLElement>) => {
     setScrollPosition(event.currentTarget.scrollTop)
@@ -132,7 +130,13 @@ function useMasonryGrid({
   return { photosToRender, containerHeight, containerWidth, onScroll, columnsNumber }
 }
 
-export default function MasonryGridController({ photos }: { photos?: PhotoType[] }) {
+export default function MasonryGridController({
+  photos,
+  onClickMore,
+}: {
+  photos?: PhotoType[]
+  onClickMore: () => void
+}) {
   const { columnsNumber } = useColumnsNumber()
 
   const { photosToRender, containerHeight, containerWidth, onScroll } = useMasonryGrid({
@@ -148,6 +152,7 @@ export default function MasonryGridController({ photos }: { photos?: PhotoType[]
       containerHeight={containerHeight}
       containerWidth={containerWidth}
       onScroll={onScroll}
+      onClickMore={onClickMore}
     />
   )
 }
