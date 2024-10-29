@@ -95,8 +95,9 @@ export function useMasonryGrid({
       const y = photo.position.y
       const height = photo.size.height
       let hidden = false
-      if (y + height + SCROLL_BUFFER < scrollPosition) hidden = true
-      if (y - SCROLL_BUFFER > scrollPosition + visibleHeight) hidden = true
+      const scrollBuffer = columnsNumber === 1 ? SCROLL_BUFFER * 4 : SCROLL_BUFFER
+      if (y + height + scrollBuffer < scrollPosition) hidden = true
+      if (y - scrollBuffer > scrollPosition + visibleHeight) hidden = true
       photo.hidden = hidden
       return photo
     })
