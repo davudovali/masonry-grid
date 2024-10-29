@@ -3,7 +3,7 @@ import styles from './MasonryGridView.module.css'
 import { memo } from 'react'
 import { Link } from 'react-router-dom'
 
-function MasonryImage(photo: PhotoToRenderType) {
+function MasonryImage({ photo, index }: { photo: PhotoToRenderType; index: number }) {
   return (
     <div
       className={styles.imageContainer}

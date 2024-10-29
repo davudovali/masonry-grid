@@ -57,9 +57,11 @@ function useSmallScreenWidth(columnsNumber: number) {
 export default function MasonryGridController({
   photos,
   onClickMore,
+  isLoading,
 }: {
   photos?: PhotoType[]
   onClickMore: () => void
+  isLoading: boolean
 }) {
   const { columnsNumber } = useColumnsNumber()
   const { smallScreenWidth } = useSmallScreenWidth(columnsNumber)
@@ -79,6 +81,7 @@ export default function MasonryGridController({
       containerWidth={containerWidth}
       onScroll={onScroll}
       onClickMore={onClickMore}
+      isLoading={isLoading}
     />
   )
 }

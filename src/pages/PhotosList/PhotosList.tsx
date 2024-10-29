@@ -47,7 +47,9 @@ export default function PhotosList() {
     }
   })
 
-  const { data } = useQuery(['photosData', page, search], () => retrievePhotos(page, search))
+  const { data, isLoading } = useQuery(['photosData', page, search], () =>
+    retrievePhotos(page, search),
+  )
 
   useEffect(() => {
     if (!data) return
@@ -100,7 +102,11 @@ export default function PhotosList() {
         <SearchInput defaultValue={search} onChangeSearch={handleSearch} />
       </Header>
       <main>
-        <MasonryGridController photos={photos} onClickMore={handleClickMore} />
+        <MasonryGridController
+          photos={photos}
+          onClickMore={handleClickMore}
+          isLoading={isLoading}
+        />
       </main>
     </div>
   )

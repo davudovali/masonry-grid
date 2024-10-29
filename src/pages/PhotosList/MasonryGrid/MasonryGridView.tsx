@@ -10,12 +10,14 @@ export default function MasonryGridView({
   containerWidth,
   onScroll,
   onClickMore,
+  isLoading,
 }: {
   photos: PhotoToRenderType[]
   containerHeight: number
   containerWidth: number | string
   onScroll: (event: UIEvent<HTMLElement>) => void
   onClickMore: () => void
+  isLoading: boolean
 }) {
   return (
     <div className={styles.containerWithScroll} onScroll={onScroll}>
@@ -23,12 +25,12 @@ export default function MasonryGridView({
         style={{ height: Math.floor(containerHeight), width: containerWidth }}
         className={styles.gridContainer}
       >
-        {photos.map((photo) => {
+        {photos.map((photo, index) => {
           if (photo.hidden) return null
 
-          return <MasonryImage {...photo} key={photo.id} />
+          return <MasonryImage photo={photo} index={index} key={photo.id} />
         })}
-        <MoreButton onClick={onClickMore} />
+        <MoreButton onClick={onClickMore} isLoading={isLoading} />
       </div>
     </div>
   )
