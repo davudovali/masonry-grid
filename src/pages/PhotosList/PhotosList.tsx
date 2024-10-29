@@ -64,10 +64,11 @@ export default function PhotosList() {
         }
         return true
       })
+
       return {
         photos: isSearchChanged
           ? filteredFromOldPhotos
-          : [...data.photos, ...filteredFromOldPhotos],
+          : [...oldValue.photos, ...filteredFromOldPhotos],
         usedIds: newUsedIds,
         search,
         oldSearch: search,

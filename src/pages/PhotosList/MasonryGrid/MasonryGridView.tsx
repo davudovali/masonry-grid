@@ -4,7 +4,7 @@ import { UIEvent } from 'react'
 import MasonryImage from './MasonryImage'
 import MoreButton from '../MoreButton/MoreButton'
 
-export default function MasondryGridView({
+export default function MasonryGridView({
   photos,
   containerHeight,
   containerWidth,
@@ -13,7 +13,7 @@ export default function MasondryGridView({
 }: {
   photos: PhotoToRenderType[]
   containerHeight: number
-  containerWidth: number
+  containerWidth: number | string
   onScroll: (event: UIEvent<HTMLElement>) => void
   onClickMore: () => void
 }) {

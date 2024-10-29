@@ -26,7 +26,7 @@ export type PhotoToRenderType = PhotoType & {
   hidden: boolean
   index: number
   size: {
-    width: number
+    width: number | string
     height: number
   }
   position: {
