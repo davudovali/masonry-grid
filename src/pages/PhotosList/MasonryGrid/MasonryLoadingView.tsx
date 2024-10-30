@@ -1,3 +1,5 @@
+import { Spin } from 'antd'
+
 export default function MasonryLoadingView() {
-  return <div>Loading....</div>
+  return <Spin size='large' />
 }

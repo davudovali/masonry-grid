@@ -9,6 +9,7 @@ import {
   HORIZONTAL_GAP,
   SMALL_SCREEN_PADDINGS,
 } from './useMasonryGrid'
+import PreloadImages from './PreloadImages'
 
 const SMALL_SCREEN_WIDTH_TREESCHOLD = 420
 
@@ -56,11 +57,13 @@ function useSmallScreenWidth(columnsNumber: number) {
 
 export default function MasonryGridController({
   photos,
+  photoUrlsToPreload,
   onClickMore,
   isLoading,
 }: {
   photos?: PhotoType[]
   onClickMore: () => void
+  photoUrlsToPreload: string[]
   isLoading: boolean
 }) {
   const { columnsNumber } = useColumnsNumber()
@@ -75,13 +78,16 @@ export default function MasonryGridController({
   if (!photos) return <MasonryLoadingView />
 
   return (
-    <MasonryGridView
-      photos={photosToRender}
-      containerHeight={containerHeight}
-      containerWidth={containerWidth}
-      onScroll={onScroll}
-      onClickMore={onClickMore}
-      isLoading={isLoading}
-    />
+    <>
+      <MasonryGridView
+        photos={photosToRender}
+        containerHeight={containerHeight}
+        containerWidth={containerWidth}
+        onScroll={onScroll}
+        onClickMore={onClickMore}
+        isLoading={isLoading}
+      />
+      <PreloadImages photoUrlsToPreload={photoUrlsToPreload} />
+    </>
   )
 }

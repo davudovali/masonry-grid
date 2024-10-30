@@ -41,9 +41,9 @@
 
 :root {
   --header-height: 60px;
-  --main-background-color: #f2e9e4;
-  --secondary-background-color: #c9ada7;
+  --main-background-color: white;
+  --secondary-background-color: #80deeb;
   --main-text-color: #22223b;
   --secondary-color: #4a4e69;
-  --hightlight-color: #9a8c98;
+  --hightlight-color: #e0f7fa;
 }

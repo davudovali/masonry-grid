@@ -37,12 +37,15 @@ function reorderLastLineToEqualizeLastLine(
 
   const lastIndex = result.length
 
-  const lineToReorder = result
+  const lastLineShortToLong = result
     .slice(lastIndex - columnsNumber, lastIndex)
     .sort((a, b) => a.size.height - b.size.height)
 
   const previousLine = result.slice(lastIndex - columnsNumber * 2, lastIndex - columnsNumber)
 
+  /*Acquire previous line photos bottom edge, then sorting base on the bottom edges values,
+   then adding the longest next photo for the shortest bottom edge
+   */
   const sortedPhotos = previousLine
     .map((photo, index) => {
       return {
@@ -54,7 +57,7 @@ function reorderLastLineToEqualizeLastLine(
     .map((lineLength) => {
       return {
         ...lineLength,
-        photo: lineToReorder.pop()!,
+        photo: lastLineShortToLong.pop()!,
       }
     })
     .sort((a, b) => a.index - b.index)
@@ -64,6 +67,7 @@ function reorderLastLineToEqualizeLastLine(
     const { photo } = sortedPhoto
     result[newIndex] = photo
 
+    //because we changed the position of the photos we need to set new y and x values
     photo.position.y = getYPosition(result, columnsNumber, newIndex)
     photo.position.x = getXPosition(result, columnsNumber, newIndex, photo.size.width)
   }
@@ -79,8 +83,6 @@ function buildPhotosToRender({
   columnsNumber: number
   smallScreenWidth: number
 }) {
-  let containerHeight = 0
-
   const photosWithSizeAndPosition = photos.reduce<PhotoToRenderType[]>((result, photo, index) => {
     const photoWidth = columnsNumber === 1 ? smallScreenWidth : DEFAULT_PHOTO_WIDTH
     const scaleRatio = photo.width / photoWidth
@@ -88,8 +90,6 @@ function buildPhotosToRender({
 
     const x = getXPosition(result, columnsNumber, index, photoWidth)
     const y = getYPosition(result, columnsNumber, index)
-
-    if (y + adjustedHeight > containerHeight) containerHeight = y + adjustedHeight
 
     result.push({
       ...photo,
@@ -105,10 +105,13 @@ function buildPhotosToRender({
       },
     })
 
+    /*The nature of masonry grid with random photos' heights leads to a situation when some columns could be much longer than others
+    to fix it I reorder photos in lines for the shortest line get the next longest photo
+     */
     return reorderLastLineToEqualizeLastLine(result, columnsNumber, index)
   }, [])
 
-  return { photosWithSizeAndPosition, containerHeight }
+  return { photosWithSizeAndPosition }
 }
 
 export function useMasonryGrid({
@@ -127,15 +130,21 @@ export function useMasonryGrid({
       return { photosWithSizeAndPosition: [], containerHeight: 0, containerWidth: 0 }
     }
 
-    const { photosWithSizeAndPosition, containerHeight } = buildPhotosToRender({
+    const { photosWithSizeAndPosition } = buildPhotosToRender({
       photos,
       columnsNumber,
       smallScreenWidth,
     })
 
+    const containerHeight = Math.max(
+      ...photosWithSizeAndPosition
+        .slice(photosWithSizeAndPosition.length - columnsNumber - 1, -1)
+        .map((photo) => photo.size.height + photo.position.y),
+    )
+
     return {
       photosWithSizeAndPosition,
-      containerHeight,
+      containerHeight: containerHeight,
       containerWidth:
         columnsNumber === 1
           ? smallScreenWidth

@@ -22,13 +22,13 @@ export default function MasonryGridView({
   return (
     <div className={styles.containerWithScroll} onScroll={onScroll}>
       <div
-        style={{ height: Math.floor(containerHeight), width: containerWidth }}
+        style={{ height: containerHeight, width: containerWidth }}
         className={styles.gridContainer}
       >
         {photos.map((photo, index) => {
           if (photo.hidden) return null
 
-          return <MasonryImage photo={photo} index={index} key={photo.id} />
+          return <MasonryImage photo={photo} key={photo.id} />
         })}
         <MoreButton onClick={onClickMore} isLoading={isLoading} />
       </div>

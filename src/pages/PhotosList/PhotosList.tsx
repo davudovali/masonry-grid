@@ -29,8 +29,9 @@ export default function PhotosList() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const [{ photos, search, page }, setPhotos] = useState<{
+  const [{ photos, search, page, photoUrlsToPreload }, setPhotos] = useState<{
     photos: PhotoType[]
+    photoUrlsToPreload: string[]
     usedIds: { [key: number]: boolean }
     search: string
     oldSearch: string
@@ -41,6 +42,7 @@ export default function PhotosList() {
     return {
       photos: [],
       usedIds: {},
+      photoUrlsToPreload: [],
       search: params.get('search') || '',
       oldSearch: params.get('search') || '',
       page: 1,
@@ -58,6 +60,7 @@ export default function PhotosList() {
       const isSearchChanged = oldValue.oldSearch !== search
       //Pexel could repeat images on different pages, have to filter images from already used
       const newUsedIds = isSearchChanged ? {} : { ...oldValue.usedIds }
+
       const filteredFromOldPhotos = data.photos.filter((x) => {
         if (newUsedIds[x.id]) {
           return false
@@ -72,6 +75,7 @@ export default function PhotosList() {
           ? filteredFromOldPhotos
           : [...oldValue.photos, ...filteredFromOldPhotos],
         usedIds: newUsedIds,
+        photoUrlsToPreload: filteredFromOldPhotos.map((photo) => photo.src.medium),
         search,
         oldSearch: search,
         page: oldValue.page,
@@ -105,6 +109,7 @@ export default function PhotosList() {
         <MasonryGridController
           photos={photos}
           onClickMore={handleClickMore}
+          photoUrlsToPreload={photoUrlsToPreload}
           isLoading={isLoading}
         />
       </main>
