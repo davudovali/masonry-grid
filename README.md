@@ -19,6 +19,16 @@ to prevent unnecessary DOM updates
 3. Photo page uses the most suitable image src to have the best load time
 4. Images that already loaded is stored in the browser cache
 
+## Lighthouse
+The average score for desktop is 90
+1. Splitting js code added about 200-300ms to the first contentful paint, removing js splitting is improving 
+the score, but is not applicable to a real application
+2. The virtual masonry buffer also affect the score because render images outside the view to improve 
+user experience during the scrolling
+3. Using the proper image resolution will also improve the score. Pexel gives 2 options for small images: medium with 350px width and small with 120px.
+In my opinion, 350px width is too big and 120px is too small in terms of UX. Having photos with native 200px width would improve network performance 
+and increase lighthouse score
+
 ## Warnings and Info
 1. Pexel has a rate limit for image requests, it could give you 402 if you are trying to load to many images in short period of time.
 For example, it blocked me after I reached 2000 images in 30 seconds. Opening the site in incognito mode or waiting 
