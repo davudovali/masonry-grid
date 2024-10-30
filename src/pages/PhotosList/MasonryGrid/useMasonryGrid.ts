@@ -138,7 +138,10 @@ export function useMasonryGrid({
 
     const containerHeight = Math.max(
       ...photosWithSizeAndPosition
-        .slice(photosWithSizeAndPosition.length - columnsNumber - 1, -1)
+        .slice(
+          photosWithSizeAndPosition.length - columnsNumber - 1,
+          photosWithSizeAndPosition.length,
+        )
         .map((photo) => photo.size.height + photo.position.y),
     )
 

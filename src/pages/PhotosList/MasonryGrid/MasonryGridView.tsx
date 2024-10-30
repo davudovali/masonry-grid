@@ -1,8 +1,10 @@
-import { PhotoSizeEnum, PhotoToRenderType } from '../PhotoType'
+import { PhotoToRenderType } from '../PhotoType'
 import styles from './MasonryGridView.module.css'
 import { UIEvent } from 'react'
 import MasonryImage from './MasonryImage'
 import MoreButton from '../MoreButton/MoreButton'
+
+const BOTTOM_MARGIN = 40
 
 export default function MasonryGridView({
   photos,
@@ -22,7 +24,7 @@ export default function MasonryGridView({
   return (
     <div className={styles.containerWithScroll} onScroll={onScroll}>
       <div
-        style={{ height: containerHeight, width: containerWidth }}
+        style={{ height: containerHeight + BOTTOM_MARGIN, width: containerWidth }}
         className={styles.gridContainer}
       >
         {photos.map((photo, index) => {
