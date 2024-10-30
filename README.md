@@ -28,3 +28,14 @@ we need to put an API KEY in the autorisation header, implementing  the CDN and 
 solve the request rate issue.
 2. Pexel could send the same photos on different pages, so I have to clean duplicated photos
 3. Pexel doesn't provide description or date in the photo info, so I cannot show it on the photo page
+
+
+To run:
+
+```
+npm i
+npm start
+```
+Requirements:
+1. node: 18
+2. npm: 8
